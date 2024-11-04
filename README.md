@@ -30,7 +30,7 @@ docker compose exec kafka kafka-topics --bootstrap-server localhost:9092 --list
 Login to the postgres console
 
 ```bash
-psql -h localhost -U flinkuser -d flinkdb
+docker-compose exec postgres psql -U flinkuser -d flinkdb
 ```
 
 Enter the password `flinkpassword` to log into the posgres console, remember this is a local configuration so default access have been configured in the `docker-compose.yml`. Then create the table
@@ -99,6 +99,11 @@ That will bring all the messages that the topic have received so far.
 ## Step 7: Read raw data from Postgres table
 
 Additionally you can query the raw messages from the IoT sensor and even parse the JSON data in PostgreSQL:
+
+```bash
+docker-compose exec postgres psql -U flinkuser -d flinkdb
+```
+
 
 ```sql
 SELECT
