@@ -10,19 +10,14 @@ def parse_and_filter(value: str) -> str | None:
     TEMP_THRESHOLD = 30.0
     data = json.loads(value)
     message_id = data["message_id"]
-    sensor_id = data["sensor_id"]
-    temperature = data["data"]["temperature"]
-    timestamp = data["timestamp"]
-    if temperature > TEMP_THRESHOLD:  # Change 30.0 to your threshold
-        alert_message = {
-            "message_id": message_id,
-            "sensor_id": sensor_id,
-            "temperature": temperature,
-            "alert": "High temperature detected",
-            "timestamp": timestamp
-        }
-        return json.dumps(alert_message)
-    return None
+    title = data["title"]
+    content = data["content"]
+    alert_message = {
+        "message_id": message_id,
+        "title": title,
+        "content": content,
+    }
+    return json.dumps(alert_message)
 
 
 def main() -> None:

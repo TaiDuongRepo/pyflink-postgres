@@ -17,36 +17,35 @@ from pyflink.datastream.connectors.kafka import (
     KafkaSink,
     KafkaSource,
 )
+from transformers import pipeline
 
 KAFKA_HOST = "kafka:19092"
 POSTGRES_HOST = "postgres:5432"
 
+# sentiment_pipeline = pipeline("text-classification", model="5CD-AI/Vietnamese-Sentiment-visobert")
+
 def parse_data(data: str) -> Row:
+    sentiment_pipeline = pipeline("text-classification", model="5CD-AI/Vietnamese-Sentiment-visobert")
     data = json.loads(data)
     message_id = data["message_id"]
-    sensor_id = int(data["sensor_id"])
-    message = json.dumps(data["message"])
-    timestamp = datetime.strptime(data["timestamp"], "%Y-%m-%dT%H:%M:%S.%f+00:00")
-    return Row(message_id, sensor_id, message, timestamp)
+    title = data["title"]
+    content = data["content"]
+    sentiment = sentiment_pipeline(title)[0]['label']
+    # sentiment = "POS"
+
+    return Row(message_id, title, content, sentiment)
 
 
 def filter_temperatures(value: str) -> str | None:
-    TEMP_THRESHOLD = 30.0
     data = json.loads(value)
     message_id = data["message_id"]
-    sensor_id = int(data["sensor_id"])
-    temperature = float(data["message"]["temperature"])
-    timestamp = data["timestamp"]
-    if temperature > TEMP_THRESHOLD:  # Change 30.0 to your threshold
-        alert_message = {
-            "message_id": message_id,
-            "sensor_id": sensor_id,
-            "temperature": temperature,
-            "alert": "High temperature detected",
-            "timestamp": timestamp,
-        }
-        return json.dumps(alert_message)
-    return None
+    title = data["title"]
+    alert_message = {
+        "message_id": message_id,
+        "title": title,
+    }
+    return json.dumps(alert_message)
+    # return None
 
 
 def initialize_env() -> StreamExecutionEnvironment:
@@ -137,15 +136,15 @@ def main() -> None:
     logger.info("Configuring source and sinks")
     kafka_source = configure_source(KAFKA_HOST)
     sql_dml = (
-        "INSERT INTO raw_sensors_data (message_id, sensor_id, message, timestamp) "
+        "INSERT INTO raw_sensors_data (message_id, title, content, sentiment) "
         "VALUES (?, ?, ?, ?)"
     )
     TYPE_INFO = Types.ROW(
         [
             Types.STRING(),  # message_id
-            Types.INT(),  # sensor_id
-            Types.STRING(),  # message
-            Types.SQL_TIMESTAMP(),  # timestamp
+            Types.STRING(),  # title
+            Types.STRING(),  # content
+            Types.STRING(),  # sentiment
         ]
     )
     jdbc_sink = configure_postgre_sink(sql_dml, TYPE_INFO)
