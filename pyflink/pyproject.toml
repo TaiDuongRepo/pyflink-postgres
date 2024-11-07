@@ -2,7 +2,7 @@
 name = "kafka_flink_postgre"
 version = "0.1.0"
 description = "Apache Flink Table API tutorial"
-authors = ["Augusto de Nevrezé"]
+authors = ["TaiDuongDevOps"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
